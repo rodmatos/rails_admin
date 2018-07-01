@@ -80,10 +80,10 @@ matrix:
     - rvm: rbx-2.2.7
       env: CI_ORM=active_record CI_DB_ADAPTER=sqlite3
       gemfile: gemfiles/rails_4.2.gemfile
-    - rvm: jruby-9.1.9.0
+    - rvm: jruby-9.1.15.0
       env: CI_ORM=mongoid
       gemfile: gemfiles/rails_5.1.gemfile
-    - rvm: jruby-9.1.9.0
+    - rvm: jruby-9.1.15.0
       env: CI_ORM=active_record CI_DB_ADAPTER=sqlite3
       gemfile: gemfiles/rails_5.1.gemfile
     - rvm: jruby-head
