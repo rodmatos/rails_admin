@@ -136,6 +136,9 @@ module RailsAdmin
             field = fields.detect { |f| f.name.to_s == field_name }
             value = parse_field_value(field, filter_dump[:v])
 
+            if field_name.include? '_translations'
+              filter_dump[:o] = 'jsonb'
+            end
             wb.add(field, value, (filter_dump[:o] || 'default'))
             # AND current filter statements to other filter statements
             scope = wb.build
@@ -224,6 +227,11 @@ module RailsAdmin
             @value = @value.mb_chars.downcase
           end
 
+          if @operator == "jsonb"
+            value_hash = JSON.parse(@value)
+            return ["#{@column}->>'#{value_hash.keys.first}' LIKE ?", "%#{value_hash.values.first}%"]
+          end
+
           @value = begin
             case @operator
             when 'default', 'like'
@@ -240,7 +248,7 @@ module RailsAdmin
           end
 
           if ['postgresql', 'postgis'].include? ar_adapter
-            ["(#{@column} ILIKE ?)", @value]
+            ["(#{@column} LIKE ?)", @value]
           else
             ["(LOWER(#{@column}) LIKE ?)", @value]
           end
