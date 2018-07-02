@@ -121,7 +121,10 @@ module RailsAdmin
         wb = WhereBuilder.new(scope)
         fields.each do |field|
           value = parse_field_value(field, query)
-          wb.add(field, value, field.search_operator)
+          if field.name.to_s.include? "_translations"
+            search_operator = "jsonb"
+          end
+          wb.add(field, value, search_operator || field.search_operator)
         end
         # OR all query statements
         wb.build
@@ -136,7 +139,7 @@ module RailsAdmin
             field = fields.detect { |f| f.name.to_s == field_name }
             value = parse_field_value(field, filter_dump[:v])
 
-            if field_name.include? '_translations'
+            if field_name.to_s.include? '_translations'
               filter_dump[:o] = 'jsonb'
             end
             wb.add(field, value, (filter_dump[:o] || 'default'))
@@ -229,7 +232,7 @@ module RailsAdmin
 
           if @operator == "jsonb"
             value_hash = JSON.parse(@value)
-            return ["#{@column}->>'#{value_hash.keys.first}' LIKE ?", "%#{value_hash.values.first}%"]
+            return ["#{@column}->>'#{value_hash.keys.first}' ILIKE ?", "%#{value_hash.values.first}%"]
           end
 
           @value = begin
