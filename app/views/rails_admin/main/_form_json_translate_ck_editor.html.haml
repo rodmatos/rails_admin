@@ -1,0 +1,42 @@
+:ruby
+  js_data = {
+    jspath: field.location ? field.location : field.base_location + "ckeditor.js",
+    base_location: field.base_location,
+    options: {
+      customConfig: field.config_js ? field.config_js : field.base_location + "config.js"
+    }
+  }
+
+- klass = "#{field.abstract_model.model_name.parameterize}-#{field.name}"
+
+.controls
+  = form.hidden_field field.name, { id: "#{klass}" }
+  .json-translate-errors
+    = form.errors_for(field)
+  %ul.nav.nav-tabs{ style: 'margin-top: 0' }
+    - field.locales.each do |locale|
+      - locale_klass = "json-translate-pane-#{field.name}-#{locale}-#{form.object.id}"
+      %li{ class: ( 'active' if locale == field.current_locale ) }
+        %a{ href: '#', data: { toggle: 'tab',  target: ".#{locale_klass}:first"} }= "#{EmojiFlag.new(locale)} #{t(locale, scope: :languages)}"
+  .tab-content{ class: "#{field.name}-inputs" }
+    - field.locales.each do |locale|
+      - locale_klass = "json-translate-pane-#{field.name}-#{locale}-#{form.object.id}"
+      .fields.tab-pane{ class: "#{locale_klass} #{'active' if locale == field.current_locale}" }
+        = form.text_area "#{field.name}_#{locale}", field.html_attributes.reverse_merge(data: { locale: "#{locale}", richtext: 'ckeditor', options: js_data.to_json }).reverse_merge({ value: field.value_for_locale(locale), class: "form-control json-translate-input", required: field.required })
+
+      :javascript
+        (function() {
+          var input = $("##{klass}");
+          var form = $(input.get(0).form);
+
+          form.on('submit', function(e) {
+            var instances = window.CKEDITOR.instances
+            value = Object.keys(instances).reduce(function(acc, instanceKey) {
+              var key = instances[instanceKey].name.substr(-2)
+              acc[key] = instances[instanceKey].getData()
+              return acc;
+            }, {})
+            input.val(JSON.stringify(value));;
+          });
+
+        })();
